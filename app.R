@@ -64,7 +64,7 @@ server <- function(input, output) {
       if(!is.null(input$Arquivo)){
         #funcoes_reativas()
         #w=fread(input$Arquivo$datapath,header=TRUE)
-        w=read.csv(input$Arquivo$datapath,header=TRUE)
+        w=fread(input$Arquivo$datapath,header=TRUE)
         return(w)
       }
       
