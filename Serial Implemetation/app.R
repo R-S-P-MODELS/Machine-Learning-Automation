@@ -230,7 +230,7 @@ server <- function(input, output) {
         }
         
         Modelos=data.frame(Acuracialm,AcuraciaTree,AcuraciaForest)
-        names(Modelos=c('Linear Regression','Regression Tree','Random Forest'))
+        names(Modelos)=c('Linear Regression','Regression Tree','Random Forest')
         return(Modelos)
         #return(Ensemble)
       }
