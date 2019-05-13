@@ -334,12 +334,47 @@ server <- function(input, output) {
      
    })
    
-   output$Supervised <- renderTable({
+  output$Supervised <- renderTable({
      if(!is.null(input$Arquivo)){
        Tabela=SupervisedEnsemble()
        print(Tabela)
-       return(Tabela)
+       for(i in 1:ncol(Tabela)){
+         index=which(Tabela[,i]=='NaN')
+         if(length(index)>0)
+           Tabela[index,i]=NA
+       }
        
+       DF=Tabela[1,]
+       
+       for(i in 1:ncol(Tabela)){
+         if(sum(is.na(Tabela[,i]))==ncol(Tabela)   ){
+           
+           DF[1,i]=NA
+           DF[2,i]=NA
+           DF[3,i]=NA
+           DF[4,i]=NA
+           DF[5,i]=NA 
+         }
+         else{
+           print(c(i,Tabela[,i]))
+           DF[1,i]=mean(Tabela[,i],na.rm=TRUE)
+           DF[2,i]=median(Tabela[,i],na.rm=TRUE)
+           if(sum(!is.na(Tabela[,i])) > 1)
+            DF[3,i]=sd(Tabela[,i],na.rm=TRUE)
+           else
+             DF[3,i]=0
+           DF[4,i]=min(Tabela[,i],na.rm=TRUE)
+           DF[5,i]=max(Tabela[,i],na.rm=TRUE)
+         }
+       }
+       vec=c('Media','Mediana','Desvio Padrão','Minimo','Maximo')
+       names(DF)=names(Tabela)
+       DF=data.frame(vec,DF)
+       names(DF)[1]='Métrica'
+       
+       #rownames(DF)=c('Mean','Median','Standart Deviation','Minimum','Maximum')
+       return(DF)
+       #return(DF)
      }
    })
 }
