@@ -11,6 +11,8 @@ library(shiny)
 require(caret)
 require(data.table)
 require(plotly)
+require(klaR)
+
 options(warn=-1)
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -27,15 +29,23 @@ ui <- fluidPage(
       conditionalPanel(
         condition="output.csv_import_ready",
       #  checkboxInput("histogram","Show histogram of x")),
+      conditionalPanel(condition="input.Principal!='Aprendizado não supervisionado'",
       selectInput(inputId = "Areas",label = "Selecione tipo de classificação",choices = c('Classificação','Regressão')),
       uiOutput("Eixox"),
       uiOutput("Remover"),
       
       uiOutput("EscolherModelo"),
       numericInput("NumeroDeTestes","Quantos testes serão feitos sobre este modelo?",min = 1,max=100,value = 1),
+      actionButton("Treinamento","Inicializar treinamento")
+      
+      ),
+      conditionalPanel(condition="input.Principal=='Aprendizado não supervisionado'",
+      selectInput(inputId="UnsupervisedChoice",label ="Metodo de aprendizado",choices=c('Kmeans','Kmodes') ),
+      numericInput(inputId ="Clusters",label = "Numero de clusters",min = 1,max=10,value = 2),
+      actionButton("AtivarTreinamento","Inicializar Treinamento")
+      ),
       #uiOutput("cores"),
       #uiOutput("tamanhos"),
-      actionButton("Treinamento","Inicializar treinamento"),
       downloadButton("downloadData", "Download do modelo")
    )),
     
@@ -43,7 +53,8 @@ ui <- fluidPage(
       mainPanel(
         tabsetPanel(id="Principal",
          tabPanel(id="SelecioneModelo",title = "Selecione seu Modelo",plotlyOutput("distPlot")),
-         tabPanel(id="ComparacaoSupervisionada",title="Comparacao Supervisionada",tableOutput("Supervised"))
+         tabPanel(id="ComparacaoSupervisionada",title="Comparacao Supervisionada",tableOutput("Supervised")),
+         tabPanel(id="Unsupervised",title="Aprendizado não supervisionado",plotOutput("NonSupervisedPlot"))
         )
       ))
    )
@@ -230,7 +241,7 @@ server <- function(input, output) {
         }
         
         Modelos=data.frame(Acuracialm,AcuraciaTree,AcuraciaForest)
-        names(Modelos)=c('Linear Regression','Regression Tree','Random Forest')
+        names(Modelos=c('Linear Regression','Regression Tree','Random Forest'))
         return(Modelos)
         #return(Ensemble)
       }
@@ -328,44 +339,61 @@ server <- function(input, output) {
      if(!is.null(input$Arquivo)){
        Tabela=SupervisedEnsemble()
        print(Tabela)
-       for(i in 1:ncol(Tabela)){
-         index=which(Tabela[,i]=='NaN')
-         if(length(index)>0)
-           Tabela[index,i]=NA
-       }
+       return(Tabela)
        
-       DF=Tabela[1,]
-       
-       for(i in 1:ncol(Tabela)){
-         if(sum(is.na(Tabela[,i]))==ncol(Tabela)   ){
-           
-           DF[1,i]=NA
-           DF[2,i]=NA
-           DF[3,i]=NA
-           DF[4,i]=NA
-           DF[5,i]=NA 
-         }
-         else{
-           print(c(i,Tabela[,i]))
-           DF[1,i]=mean(Tabela[,i],na.rm=TRUE)
-           DF[2,i]=median(Tabela[,i],na.rm=TRUE)
-           if(sum(!is.na(Tabela[,i])) > 1)
-            DF[3,i]=sd(Tabela[,i],na.rm=TRUE)
-           else
-             DF[3,i]=0
-           DF[4,i]=min(Tabela[,i],na.rm=TRUE)
-           DF[5,i]=max(Tabela[,i],na.rm=TRUE)
-         }
-       }
-       vec=c('Media','Mediana','Desvio Padrão','Minimo','Maximo')
-       names(DF)=names(Tabela)
-       DF=data.frame(vec,DF)
-       names(DF)[1]='Métrica'
-       
-       #rownames(DF)=c('Mean','Median','Standart Deviation','Minimum','Maximum')
-       return(DF)
-       #return(DF)
      }
+   })
+   
+   UnsupervisedTraining <- eventReactive(input$AtivarTreinamento,{
+     if(!is.null(input$Arquivo)){
+       w=LeituraArquivo()
+       Listas=list()
+       
+       w=as.data.frame(w)
+       print("Comecou Clusterizacao")
+     if(input$UnsupervisedChoice=="Kmodes"){
+       Categoricos=w[,which(sapply(w,class) %in% c('factor','character'))]
+       require(klaR)
+       kmo=kmodes(Categoricos,modes=input$Clusters,iter.max=100)
+       Listas[[1]]=Categoricos
+       print(class(Categoricos))
+       
+       Listas[[2]]=kmo
+       print("Terminou Clusterizacao")
+       return(Listas)
+     }
+     else if(input$UnsupervisedChoice=="Kmeans"){
+       Numericos=w[,which(sapply(w,class) %in% c('numeric','integer'))]
+       
+       kmo=kmeans(Numericos,centers = input$Clusters,iter.max=100)
+       Listas=list()
+       print(class(Numericos))
+       Listas[[1]]=Numericos
+       Listas[[2]]=kmo
+       print("Terminou Clusterizacao")
+       return(Listas)
+     }
+     }
+   })
+   
+   output$NonSupervisedPlot <- renderPlot({
+     if(!is.null(input$Arquivo)){
+       print("Testando")
+      w=LeituraArquivo()
+      source("PlotPairs.R")
+      Lista=UnsupervisedTraining()
+      if(length(Lista)==2){
+        Pontos=Lista[[1]]
+        print(class(Pontos))
+        kmo=Lista[[2]]
+        p1<-PairPlot(Pontos,kmo$cluster)
+        print(p1)
+        #plot(Pontos,col=kmo$cluster)
+        #plot(Lista[[1]],Lista[[2]])
+        
+      }  
+     }
+     
    })
 }
 

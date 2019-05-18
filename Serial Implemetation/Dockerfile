@@ -25,10 +25,13 @@ RUN R -e "install.packages(c('shiny', 'rmarkdown'), repos='https://cloud.r-proje
 # install dependencies of the Analysis app
 RUN R -e "install.packages(c('caret','plotly','data.table'), repos='https://cloud.r-project.org/',dependencies=TRUE)"
 
+RUN R -e "install.packages(c('klaR','cdata'), repos='https://cloud.r-project.org/',dependencies=TRUE)"
+
 
 
 # copy the app to the image
 COPY app.R  app.R
+copy PlotPairs.R PlotPairs.R
 EXPOSE 3838
 
 CMD ["R", "-e", "shiny::runApp('app.R',port=3838,host='0.0.0.0',launch.browser=FALSE)"]
