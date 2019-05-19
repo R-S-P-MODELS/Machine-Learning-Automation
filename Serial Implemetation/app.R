@@ -42,12 +42,16 @@ ui <- fluidPage(
       conditionalPanel(condition="input.Principal=='Aprendizado não supervisionado'",
       selectInput(inputId="UnsupervisedChoice",label ="Metodo de aprendizado",choices=c('Kmeans','Kmodes') ),
       numericInput(inputId ="Clusters",label = "Numero de clusters",min = 1,max=10,value = 2),
+      uiOutput("ClusterVariables"),
       actionButton("AtivarTreinamento","Inicializar Treinamento")
       ),
       #uiOutput("cores"),
       #uiOutput("tamanhos"),
+   
       downloadButton("downloadData", "Download do modelo")
-   )),
+   )
+  
+   ),
     
       # Show a plot of the generated distribution
       mainPanel(
@@ -55,7 +59,11 @@ ui <- fluidPage(
          tabPanel(id="SelecioneModelo",title = "Selecione seu Modelo",plotlyOutput("distPlot")),
          tabPanel(id="ComparacaoSupervisionada",title="Comparacao Supervisionada",tableOutput("Supervised")),
          tabPanel(id="Unsupervised",title="Aprendizado não supervisionado",plotOutput("NonSupervisedPlot"))
-        )
+        ),
+        h3("Aplicativo Desenvolvivo por Rafael Silva Pereira"),
+        h3("Contato: r.s.p.models@gmail.com"),
+        h3("Inicie o processo subindo um arquivo csv"),
+        h3("Processos de machine learning costumam ser demorados, utilize a implementação paralela em sua maquina")
       ))
    )
 
@@ -94,6 +102,16 @@ server <- function(input, output) {
     }
     
   )
+  output$ClusterVariables <- renderUI({
+    w=LeituraArquivo()
+    w=as.data.frame(w)
+    if(input$UnsupervisedChoice=='Kmeans')
+      w1=w[,which(sapply(w,class) %in% c('numeric','integer'))]
+    else if(input$UnsupervisedChoice=='Kmodes')
+      w1=w[,which(sapply(w,class) %in% c('factor','character'))]
+      selectInput(inputId = "EliminaCluster",label = "Variaveis que não serão utilizadas para clusterização",choices = names(w1),multiple = TRUE)
+
+  })
   
   output$Eixox = renderUI({
     if(!is.null(input$Arquivo)){
@@ -350,12 +368,16 @@ server <- function(input, output) {
        Listas=list()
        
        w=as.data.frame(w)
+       if(length(input$EliminaCluster)>0){
+        Remover=which(names(w) %in% input$EliminaCluster)
+        w=w[,-Remover]
+       }
        print("Comecou Clusterizacao")
      if(input$UnsupervisedChoice=="Kmodes"){
        Categoricos=w[,which(sapply(w,class) %in% c('factor','character'))]
        require(klaR)
        kmo=kmodes(Categoricos,modes=input$Clusters,iter.max=100)
-       Listas[[1]]=Categoricos
+       Listas[[1]]=w
        print(class(Categoricos))
        
        Listas[[2]]=kmo
@@ -368,7 +390,7 @@ server <- function(input, output) {
        kmo=kmeans(Numericos,centers = input$Clusters,iter.max=100)
        Listas=list()
        print(class(Numericos))
-       Listas[[1]]=Numericos
+       Listas[[1]]=w
        Listas[[2]]=kmo
        print("Terminou Clusterizacao")
        return(Listas)
@@ -386,7 +408,7 @@ server <- function(input, output) {
         Pontos=Lista[[1]]
         print(class(Pontos))
         kmo=Lista[[2]]
-        p1<-PairPlot(Pontos,kmo$cluster)
+        p1<-PairPlot(w,kmo$cluster)
         print(p1)
         #plot(Pontos,col=kmo$cluster)
         #plot(Lista[[1]],Lista[[2]])
