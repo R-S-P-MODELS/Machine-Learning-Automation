@@ -357,7 +357,18 @@ server <- function(input, output) {
      if(!is.null(input$Arquivo)){
        Tabela=SupervisedEnsemble()
        print(Tabela)
-       return(Tabela)
+       nomes=names(Tabela)
+       metricas=c('Média','Mediana','Desvio Padrão','Minimo','Maximo')
+       Tabela1=data.frame(matrix(NA,nrow=5,ncol=ncol(Tabela)) )
+       Tabela1[1,]=apply(Tabela,2,mean,na.rm=TRUE)
+       Tabela1[2,]=apply(Tabela,2,median,na.rm=TRUE)
+       Tabela1[3,]=apply(Tabela,2,sd,na.rm=TRUE)
+       Tabela1[4,]=apply(Tabela,2,min,na.rm=TRUE)
+       Tabela1[5,]=apply(Tabela,2,max,na.rm=TRUE)
+       Tabela1=data.frame(metricas,Tabela1)
+       names(Tabela1)[1]='Metricas'
+       names(Tabela1)[2:ncol(Tabela1)]=names(Tabela)
+       return(Tabela1)
        
      }
    })
@@ -408,6 +419,8 @@ server <- function(input, output) {
         Pontos=Lista[[1]]
         print(class(Pontos))
         kmo=Lista[[2]]
+        #save(kmo,file = "ModeloFinal.Rdata")
+        
         p1<-PairPlot(w,kmo$cluster)
         print(p1)
         #plot(Pontos,col=kmo$cluster)
