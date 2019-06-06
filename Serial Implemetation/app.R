@@ -172,8 +172,15 @@ server <- function(input, output) {
      # print(input$NumeroDeTestes)
       Ensemble=list()
     for(i in 1:input$NumeroDeTestes){
+      string=paste("The model",input$Modelo,sep=" ")
+      string=paste(string,"is being trained on instance",sep=" ")
+	string=paste(string,i,sep=" ")
+	string=paste(string,"of",sep=" ")
+	string=paste(string,input$NumeroDeTestes,sep=" ")
+      showModal(modalDialog(string, footer=NULL))
       ModeloFinal=TrainModel(input$Modelo)
       Ensemble[[i]]=ModeloFinal
+      removeModal()
     }
     return(Ensemble)
     }
@@ -186,44 +193,67 @@ server <- function(input, output) {
        EnsembleBayes=list()
        AcuraciaBayes=c()
        for(i in 1:input$NumeroDeTestes){
+	string=paste("The model Bayes is being trained on instance",i,"of",input$NumeroDeTestes,sep=" ")
+        showModal(modalDialog(string, footer=NULL))
         ModeloFinal=TrainModel('Bayes')
         EnsembleBayes[[i]]=ModeloFinal
         AcuraciaBayes[i]=max(ModeloFinal$results$Accuracy)
+	removeModal()
        }
        EnsembleKNN=list()
        AcuraciaKnn=c()
        for(i in 1:input$NumeroDeTestes){
+	string=paste("The model KNN is being trained on instance",i,"of",input$NumeroDeTestes,sep=" ")
+        showModal(modalDialog(string, footer=NULL))
+
          ModeloFinal=TrainModel('KNN')
          EnsembleKNN[[i]]=ModeloFinal
          AcuraciaKnn[i]=max(ModeloFinal$results$Accuracy)
+	removeModal()
        }
        EnsembleLogistic=list()
        AcuraciaLogistic=c()
        for(i in 1:input$NumeroDeTestes){
+	string=paste("The model Logistic Regression is being trained on instance",i,"of",input$NumeroDeTestes,sep=" ")
+        showModal(modalDialog(string, footer=NULL))
+
          ModeloFinal=TrainModel('Logistic Regression')
          EnsembleLogistic[[i]]=ModeloFinal
          AcuraciaLogistic[i]=max(ModeloFinal$results$Accuracy)
+	removeModal()
        }
        EnsembleTree=list()
        AcuraciaTree=c()
        for(i in 1:input$NumeroDeTestes){
+	string=paste("The model Decision Tree is being trained on instance",i,"of",input$NumeroDeTestes,sep=" ")
+        showModal(modalDialog(string, footer=NULL))
+
          ModeloFinal=TrainModel('Decision Tree')
          EnsembleTree[[i]]=ModeloFinal
          AcuraciaTree[i]=max(ModeloFinal$results$Accuracy)
+	removeModal()
        }
        EnsembleSVM=list()
        AcuraciaSVM=c()
        for(i in 1:input$NumeroDeTestes){
+	string=paste("The model SVM is being trained on instance",i,"of",input$NumeroDeTestes,sep=" ")
+        showModal(modalDialog(string, footer=NULL))
+
          ModeloFinal=TrainModel('SVM')
          EnsembleSVM[[i]]=ModeloFinal
          AcuraciaSVM[i]=max(ModeloFinal$results$Accuracy)
+	removeModal()
        }
        EnsembleForest=list()
        AcuraciaForest=c()
        for(i in 1:input$NumeroDeTestes){
+	string=paste("The model Random Forest is being trained on instance",i,"of",input$NumeroDeTestes,sep=" ")
+        showModal(modalDialog(string, footer=NULL))
+
          ModeloFinal=TrainModel('Random Forest')
          EnsembleForest[[i]]=ModeloFinal
          AcuraciaForest[i]=max(ModeloFinal$results$Accuracy)
+	removeModal()
        }
        
        Modelos=data.frame(AcuraciaBayes,AcuraciaKnn,AcuraciaLogistic,AcuraciaSVM,AcuraciaTree,AcuraciaForest)
@@ -236,26 +266,38 @@ server <- function(input, output) {
         Ensemblelm=list()
         Acuracialm=c()
         for(i in 1:input$NumeroDeTestes){
+string=paste("The model Linear Regression is being trained on instance",i,"of",input$NumeroDeTestes,sep=" ")
+        showModal(modalDialog(string, footer=NULL))
+
           ModeloFinal=TrainModel('Linear Regression')
           Ensemblelm[[i]]=ModeloFinal
           Acuracialm[i]=min(ModeloFinal$results$RMSE)
+	removeModal()
         }
         
         
         EnsembleTree=list()
         AcuraciaTree=c()
         for(i in 1:input$NumeroDeTestes){
+string=paste("The model Regression Tree is being trained on instance",i,"of",input$NumeroDeTestes,sep=" ")
+        showModal(modalDialog(string, footer=NULL))
+
           ModeloFinal=TrainModel('Regression Tree')
           EnsembleTree[[i]]=ModeloFinal
           AcuraciaTree[i]=min(ModeloFinal$results$RMSE)
+	removeModal()
         }
         
         EnsembleForest=list()
         AcuraciaForest=c()
         for(i in 1:input$NumeroDeTestes){
+string=paste("The model Random Forest is being trained on instance",i,"of",input$NumeroDeTestes,sep=" ")
+        showModal(modalDialog(string, footer=NULL))
+
           ModeloFinal=TrainModel('Random Forest')
           EnsembleForest[[i]]=ModeloFinal
           AcuraciaForest[i]=min(ModeloFinal$results$RMSE)
+	removeModal()
         }
         
         Modelos=data.frame(Acuracialm,AcuraciaTree,AcuraciaForest)
@@ -301,11 +343,11 @@ server <- function(input, output) {
     # print(Indice)
      #vecob=names(Training)[Indice]
      #vectest=names(Training)[-Indice]
-     showModal(modalDialog("The code is currently running please wait", footer=NULL))
+     #showModal(modalDialog("The code is currently running please wait", footer=NULL))
      
      ModeloFinal <- train(as.formula(paste(input$X, "~ .")),data=Training,method=MetodoUtilizado,trControl=trctrl,tuneLength = 10)
      #print("huebr")
-     removeModal()
+     #removeModal()
      
      #print(ModeloFinal)
      return(ModeloFinal)
@@ -419,8 +461,6 @@ server <- function(input, output) {
         Pontos=Lista[[1]]
         print(class(Pontos))
         kmo=Lista[[2]]
-        #save(kmo,file = "ModeloFinal.Rdata")
-        
         p1<-PairPlot(w,kmo$cluster)
         print(p1)
         #plot(Pontos,col=kmo$cluster)
