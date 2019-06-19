@@ -127,8 +127,11 @@ server <- function(input, output) {
         Rejeita=as.numeric( which(sapply(w,class) %in% c('character','factor') ) )
       if(input$Areas=="Classificação")
         Rejeita=as.numeric( which(sapply(w,class) %in% c('numeric','integer') ) )
-      
+      #print(names(w)[Rejeita])
+      if(length(Rejeita)>0)
         selectInput("X", label = "Variavel a ser predita",choices = names(w)[-Rejeita])
+      else
+        selectInput("X", label = "Variavel a ser predita",choices = names(w))
     #  }
       
       
